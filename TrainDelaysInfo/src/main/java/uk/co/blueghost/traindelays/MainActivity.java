@@ -168,6 +168,9 @@ public class MainActivity extends Activity {
     private AutoCompleteTextView fromACTV;
     private AutoCompleteTextView toACTV;
 
+    private List<String> fromAutoCompleteSource = new ArrayList<String>();
+    private List<String> toAutoCompleteSource = new ArrayList<String>();
+
     private class HttpAsyncTask extends AsyncTask<String, Void, List<Station>> {
         @Override
         protected List<Station> doInBackground(String... urls) {
@@ -181,18 +184,19 @@ public class MainActivity extends Activity {
             //etResponse.setText(result);
             //Log.d("Data", result);
 
-            List<String> stations = new ArrayList<String>();
-            for(Station s : result){
-                stations.add(s.Description + "(" + s.CRS + ")");
-            }
+            //List<String> stations = new ArrayList<String>();
+            //for(Station s : result){
+            //    stations.add(s.Description + "(" + s.CRS + ")");
+            //}
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(parentActivity, android.R.layout.simple_dropdown_item_1line, stations);
+            StationArrayAdapter fromAdapter = new StationArrayAdapter(parentActivity, android.R.layout.simple_dropdown_item_1line, fromAutoCompleteSource, result);
+            StationArrayAdapter toAdapter = new StationArrayAdapter(parentActivity, android.R.layout.simple_dropdown_item_1line, toAutoCompleteSource, result);
 
             fromACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
             toACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView2);
 
-            fromACTV.setAdapter(adapter);
-            toACTV.setAdapter(adapter);
+            fromACTV.setAdapter(fromAdapter);
+            toACTV.setAdapter(toAdapter);
         }
     }
 
@@ -239,7 +243,7 @@ public class MainActivity extends Activity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 2;
         }
 
         @Override
@@ -250,8 +254,6 @@ public class MainActivity extends Activity {
                     return getString(R.string.title_section1).toUpperCase(l);
                 case 1:
                     return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
             }
             return null;
         }
@@ -286,8 +288,8 @@ public class MainActivity extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
+            //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+            //textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
             return rootView;
         }
     }
