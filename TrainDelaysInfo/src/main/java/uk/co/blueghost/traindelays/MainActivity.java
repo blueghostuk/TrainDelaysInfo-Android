@@ -1,6 +1,5 @@
 package uk.co.blueghost.traindelays;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,27 +8,22 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.os.AsyncTask;
-import android.os.Message;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.JsonReader;
 import android.util.JsonToken;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
@@ -54,12 +48,16 @@ public class MainActivity extends Activity {
      */
     ViewPager mViewPager;
 
+    List<Station> mStations;
+
+    private Activity mParentActivity = this;
+    private List<String> mFromAutoCompleteSource = new ArrayList<String>();
+    private List<String> mToAutoCompleteSource = new ArrayList<String>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -69,16 +67,47 @@ public class MainActivity extends Activity {
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        fromACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
-        toACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView2);
-
         // call AsynTask to perform network operation on separate thread
         new HttpAsyncTask().execute("http://api.trainnotifier.co.uk/Station/?apiName=co.uk.blueghost.traindelays");
+    }
 
+    public void doSearch(View view){
+        AutoCompleteTextView fromACTV = (AutoCompleteTextView)findViewById(R.id.fromStationAclTxtView);
+        AutoCompleteTextView toACTV = (AutoCompleteTextView)findViewById(R.id.toStationAclTxtView);
+
+        String from = fromACTV.getText().toString();
+        String to = toACTV.getText().toString();
+
+        Station fromStation = null,
+                toStation = null;
+        for (Station s : mStations) {
+            if (from.equalsIgnoreCase(s.Description)) {
+                fromStation = s;
+            }
+            if (to.equalsIgnoreCase(s.Description)) {
+                toStation = s;
+            }
+            if (fromStation != null && toStation != null) {
+                break;
+            }
+        }
+        if (fromStation == null || toStation == null){
+            return;
+        }
+
+
+        ResultsFragment results = (ResultsFragment)mSectionsPagerAdapter.getItem(1);
+
+        EditText edit1 = (EditText)findViewById(R.id.editText);
+        edit1.setText(fromStation.Description);
+        EditText edit2 = (EditText)findViewById(R.id.editText2);
+        edit2.setText(toStation.Description);
+
+        mViewPager.setCurrentItem(1);
     }
 
     public static List<Station> GET(String url){
-        InputStream inputStream = null;
+        InputStream inputStream;
         List<Station> result = null;
         try {
 
@@ -124,7 +153,6 @@ public class MainActivity extends Activity {
     }
 
     private static Station readMessage(JsonReader reader) throws IOException {
-        long id = -1;
         String stationName = null;
         String tiploc = null;
         String description = null;
@@ -164,13 +192,6 @@ public class MainActivity extends Activity {
         return station;
     }
 
-    private Activity parentActivity = this;
-    private AutoCompleteTextView fromACTV;
-    private AutoCompleteTextView toACTV;
-
-    private List<String> fromAutoCompleteSource = new ArrayList<String>();
-    private List<String> toAutoCompleteSource = new ArrayList<String>();
-
     private class HttpAsyncTask extends AsyncTask<String, Void, List<Station>> {
         @Override
         protected List<Station> doInBackground(String... urls) {
@@ -181,25 +202,19 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(List<Station> result) {
             Toast.makeText(getBaseContext(), "Received!", Toast.LENGTH_LONG).show();
-            //etResponse.setText(result);
-            //Log.d("Data", result);
 
-            //List<String> stations = new ArrayList<String>();
-            //for(Station s : result){
-            //    stations.add(s.Description + "(" + s.CRS + ")");
-            //}
+            StationArrayAdapter fromAdapter = new StationArrayAdapter(mParentActivity, android.R.layout.simple_dropdown_item_1line, mFromAutoCompleteSource, result);
+            StationArrayAdapter toAdapter = new StationArrayAdapter(mParentActivity, android.R.layout.simple_dropdown_item_1line, mToAutoCompleteSource, result);
 
-            StationArrayAdapter fromAdapter = new StationArrayAdapter(parentActivity, android.R.layout.simple_dropdown_item_1line, fromAutoCompleteSource, result);
-            StationArrayAdapter toAdapter = new StationArrayAdapter(parentActivity, android.R.layout.simple_dropdown_item_1line, toAutoCompleteSource, result);
+            AutoCompleteTextView fromACTV = (AutoCompleteTextView)findViewById(R.id.fromStationAclTxtView);
+            AutoCompleteTextView toACTV = (AutoCompleteTextView)findViewById(R.id.toStationAclTxtView);
 
-            fromACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
-            toACTV = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView2);
+            mStations = result;
 
             fromACTV.setAdapter(fromAdapter);
             toACTV.setAdapter(toAdapter);
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -221,8 +236,6 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    
-
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -237,7 +250,13 @@ public class MainActivity extends Activity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            switch(position){
+                default:
+                case 0:
+                    return new PlaceholderFragment();
+                case 1:
+                    return new ResultsFragment();
+            }
         }
 
         @Override
@@ -263,34 +282,23 @@ public class MainActivity extends Activity {
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-        }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            //textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
+            return inflater.inflate(R.layout.fragment_main, container, false);
+        }
+    }
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class ResultsFragment extends Fragment  {
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_results, container, false);
         }
     }
 

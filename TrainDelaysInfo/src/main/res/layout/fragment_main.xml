@@ -1,55 +1,28 @@
-<TableLayout
+<LinearLayout
+    android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TableRow
+    <AutoCompleteTextView
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="wrap_content"
+        android:id="@+id/fromStationAclTxtView"
+        android:hint="@string/fromStationLabel"/>
 
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/fromStationLabel"
-            android:id="@+id/textView"
-            android:labelFor="@+id/autoCompleteTextView"
-            android:layout_marginLeft="10dp" />
-
-        <AutoCompleteTextView
-            android:layout_width="280dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/autoCompleteTextView" />
-    </TableRow>
-
-    <TableRow
+    <AutoCompleteTextView
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="wrap_content"
+        android:id="@+id/toStationAclTxtView"
+        android:hint="@string/toStationLabel"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/toStationLabel"
-            android:id="@+id/textView2"
-            android:labelFor="@+id/autoCompleteTextView2"
-            android:layout_marginLeft="10dp"
-            android:layout_gravity="top" />
-
-        <AutoCompleteTextView
-            android:layout_width="210dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/autoCompleteTextView2" />
-    </TableRow>
-
-    <TableRow
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/searchButton"
-            android:id="@+id/button"
-            android:layout_span="2" />
-    </TableRow>
-</TableLayout>
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:text="@string/searchButton"
+        android:id="@+id/searchBtn"
+        android:onClick="doSearch"/>
+</LinearLayout>

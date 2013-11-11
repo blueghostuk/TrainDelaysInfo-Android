@@ -2,14 +2,8 @@ package uk.co.blueghost.traindelays;
 
 import android.content.Context;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.BaseAdapter;
 import android.widget.Filter;
-import android.widget.Filterable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +13,19 @@ import java.util.List;
  */
 public class StationArrayAdapter extends ArrayAdapter<String>{
 
-    private final List<Station> stationList;
-    private final List<String> autoCompleteList;
+    private final List<Station> mStationList;
+    private final List<String> mAutoCompleteList;
 
     public StationArrayAdapter(Context context, int resource, List<String> objects, List<Station> stations) {
         super(context, resource, objects);
 
-        autoCompleteList = objects;
-        stationList = stations;
+        mAutoCompleteList = objects;
+        mStationList = stations;
     }
 
     @Override
     public Filter getFilter() {
-        return new StationFilter(this.stationList);
+        return new StationFilter(this.mStationList);
     }
 
     private class StationFilter extends Filter {
@@ -45,7 +39,7 @@ public class StationArrayAdapter extends ArrayAdapter<String>{
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
             FilterResults fr = new FilterResults();
-            if (constraint == null || constraint.length() == 0){
+            if (constraint == null || constraint.length() < 3){
                 Log.println(Log.INFO, "Query", "No Query");
                 fr.count = 0;
                 fr.values = new ArrayList<String>();
@@ -54,9 +48,9 @@ public class StationArrayAdapter extends ArrayAdapter<String>{
             List<String> results = new ArrayList<String>();
             String constraintStr = constraint.toString().toLowerCase();
             Log.println(Log.INFO, "Query", constraintStr);
-            Log.println(Log.INFO, "Query", "Searching:" + stationList.size() + " stations");
+            Log.println(Log.INFO, "Query", "Searching:" + mStationList.size() + " stations");
             for(Station station: stationsList){
-                if (station.CRS == constraintStr) {
+                if (station.CRS.equalsIgnoreCase(constraintStr)) {
                     results.add(station.Description);
                     break;
                 } else if (station.CRS.toLowerCase().startsWith(constraintStr) || station.Description.toLowerCase().startsWith(constraintStr)) {
@@ -73,8 +67,8 @@ public class StationArrayAdapter extends ArrayAdapter<String>{
         protected void publishResults(CharSequence constraint, FilterResults results) {
             if (results.count > 0) {
                 Log.println(Log.INFO, "Results", "FOUND");
-                autoCompleteList.clear();
-                autoCompleteList.addAll((ArrayList<String>) results.values);
+                mAutoCompleteList.clear();
+                mAutoCompleteList.addAll((ArrayList<String>) results.values);
                 notifyDataSetChanged();
             } else {
                 Log.println(Log.INFO, "Results", "-");
